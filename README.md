@@ -70,8 +70,8 @@ $ kubectl describe pod fail-1036623984
 <p>Please check the <code>Events</code> section for more details on the error.</p>
 <p><em><strong>Rootcause:</strong></em></p>
 <p>Most common problems are (a) having the wrong container image/tag specified and (b) trying to use private images without providing registry credentials and © kubernetes doesn’t have permissions to pull the image in private registry and (d) image is not existing in the container registry specified.</p>
-<p><em><strong>Solution:</strong></em><br>
-From a local machine , try to pull the same image specified in deployment.yml ,</p>
+<p><em><strong>Solution:</strong></em></p>
+<p>From a local machine , try to pull the same image specified in deployment.yml ,</p>
 <p>Example:</p>
 <pre><code>docker pull jenkins/jenkins:2.108.2
 </code></pre>
@@ -174,5 +174,27 @@ fit failure on node <span class="token punctuation">(</span>gke-ctm-1-sysdig2-35
 <li>Request your cluster admin to scale up the cluster resources.</li>
 <li>If the cluster is hosted on Cloud, It would be good to enable the auto-scaling feature.</li>
 </ol>
-<h3 id="section"></h3>
+<h3 id="issue-networking-related-issues"><em>5. Issue: Networking Related Issues:</em></h3>
+<h4 id="pod-cidr-conflicts">Pod CIDR Conflicts</h4>
+<p>Issue occurs when pod network subnets start conflicting with host networks.</p>
+<p>Pod to pod communication is disrupted with routing problems.</p>
+<pre class=" language-bash"><code class="prism  language-bash">$ curl http://172.28.128.132:5000
+curl: <span class="token punctuation">(</span>7<span class="token punctuation">)</span> Failed to connect to 172.28.128.132 port 5000: No route to host
+</code></pre>
+<p><em><strong>Rootcause:</strong></em><br>
+When Pod IP range matches with cluster IP range.<br>
+Check,</p>
+<pre><code>kubectl get pods -o wide
+</code></pre>
+<p>And,</p>
+<pre><code>ip addr list
+</code></pre>
+<p><em><strong>Solution:</strong></em><br>
+IP address range could be specified in your <a href="https://kubernetes.io/docs/concepts/cluster-administration/network-plugins/#cni">CNI plugin</a> or <a href="https://kubernetes.io/docs/concepts/cluster-administration/network-plugins/#kubenet">kubenet</a> pod-cidr parameter.</p>
+<p>Double-check what RFC1918 private network subnets are in use in your network, VLAN or VPC and make certain that there is no overlap.</p>
+<p>Once you detect the overlap, update the Pod CIDR to use a range that avoids the conflict.</p>
+<ul>
+<li>For more Networking related troubleshooing guide Refer,<br>
+<a href="https://gravitational.com/blog/troubleshooting-kubernetes-networking/">https://gravitational.com/blog/troubleshooting-kubernetes-networking/</a></li>
+</ul>
 
