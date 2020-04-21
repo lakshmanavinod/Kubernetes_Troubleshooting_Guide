@@ -197,4 +197,16 @@ IP address range could be specified in your <a href="https://kubernetes.io/docs/
 <li>For more Networking related troubleshooing guide Refer,<br>
 <a href="https://gravitational.com/blog/troubleshooting-kubernetes-networking/">https://gravitational.com/blog/troubleshooting-kubernetes-networking/</a></li>
 </ul>
+<h3 id="issue-what-if-service-ip-range--overlaps-with-pod-ip-range.">6.Issue: What if Service IP range  overlaps with POD IP range.</h3>
+<p>In this case, the IP range would be full sooner, if both K8s services and K8s pods assign the IPs from the same subnet range.</p>
+<p><em><strong>Rootcause:</strong></em></p>
+<p>By default , Kubernetes service IPs are in range 192.168.0.0/24 and pod IPs are in range 192.168.0.0/16.</p>
+<p>This limits us to only 255 service IPs</p>
+<p>The only reason there’s no clash here is because flannel allocates a /24 to each node, and I think the 192.168.0.0/24 is assigned to one of the proxy nodes (which will never have pods in them).</p>
+<p>These should be totally independent network ranges that also must not clash with anything else. We need to reassign these pretty soon.</p>
+<p>Note on flannel TTL: <a href="https://github.com/coreos/flannel/blob/master/subnet/local_manager.go#L31">https://github.com/coreos/flannel/blob/master/subnet/local_manager.go#L31</a></p>
+<p>flannel docs <a href="https://github.com/coreos/flannel">https://github.com/coreos/flannel</a></p>
+<p><em><strong>Resolution:</strong></em></p>
+<p>Subnet the existing 192.168.0.0/16 (flannel) – overlaps with Services allocation of 192.168.0.0/24 into two subnets of 192.168.0.0/17 for Services and 192.168.128.0/17 for Flannel</p>
+<p>Details steps mentioned here</p>
 
